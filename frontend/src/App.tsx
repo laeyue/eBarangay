@@ -16,6 +16,7 @@ import NotificationsEnhanced from "./pages/NotificationsEnhanced";
 import SmsAlerts from "./pages/SmsAlerts";
 import Announcements from "./pages/Announcements";
 import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Support from "./pages/Support";
@@ -38,6 +39,7 @@ const App = () => (
           />
           <Route path="/signup" element={<Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/report-incident" element={<ReportIncident />} />
           <Route path="/request-document" element={<RequestDocument />} />

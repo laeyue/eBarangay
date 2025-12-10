@@ -13,6 +13,8 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { ArrowLeft, Mail, CheckCircle } from "lucide-react";
 
+import { auth } from "@/lib/api";
+
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,8 +31,7 @@ const ForgotPassword = () => {
     setLoading(true);
 
     try {
-      // TODO: Implement forgot password API endpoint
-      await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate API call
+      await auth.forgotPassword(email);
 
       setEmailSent(true);
       toast.success("Password reset instructions sent!");

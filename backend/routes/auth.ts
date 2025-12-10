@@ -1,11 +1,18 @@
 import express, { Request } from "express";
 import jwt from "jsonwebtoken";
 import multer from "multer";
+import crypto from "crypto";
 import User from "../models/User";
 import { protect } from "../middleware/auth";
 import { AuthRequest } from "../types/express";
+import sendEmail from "../utils/sendEmail";
 
 const router = express.Router();
+
+router.use((req, res, next) => {
+  console.log(`Auth Route hit: ${req.method} ${req.path}`);
+  next();
+});
 
 // Configure multer for profile picture uploads
 const upload = multer({
@@ -159,6 +166,95 @@ router.post("/change-password", protect, async (req: AuthRequest, res) => {
     await user.save();
 
     res.json({ message: "Password changed successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Forgot Password
+router.post("/forgot-password", async (req, res) => {
+  console.log("Forgot password request received for:", req.body.email);
+  try {
+    const user = await User.findOne({ email: req.body.email });
+
+    if (!user) {
+      console.log("User not found for email:", req.body.email);
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Get reset token
+    const resetToken = crypto.randomBytes(20).toString("hex");
+
+    // Hash token and set to resetPasswordToken field
+    user.resetPasswordToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+
+    // Set expire
+    user.resetPasswordExpire = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    await user.save({ validateBeforeSave: false });
+    console.log("Reset token saved for user:", user.email);
+
+    // Create reset url
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    const resetLink = `${frontendUrl}/reset-password/${resetToken}`;
+    console.log("Reset link generated:", resetLink);
+
+    const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please click the link below to reset your password: \n\n ${resetLink}`;
+
+    try {
+      console.log("Attempting to send email to:", user.email);
+      await sendEmail({
+        email: user.email,
+        subject: "Password Reset Token",
+        message,
+      });
+      console.log("Email sent successfully");
+
+      res.status(200).json({ success: true, data: "Email sent" });
+    } catch (err) {
+      console.error("Error sending email:", err);
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpire = undefined;
+
+      await user.save({ validateBeforeSave: false });
+
+      return res.status(500).json({ message: "Email could not be sent" });
+    }
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Reset Password
+router.put("/reset-password/:resetToken", async (req, res) => {
+  try {
+    // Get hashed token
+    const resetPasswordToken = crypto
+      .createHash("sha256")
+      .update(req.params.resetToken)
+      .digest("hex");
+
+    const user = await User.findOne({
+      resetPasswordToken,
+      resetPasswordExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid token" });
+    }
+
+    // Set new password
+    user.password = req.body.password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save();
+
+    res.status(200).json({ success: true, data: "Password updated successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

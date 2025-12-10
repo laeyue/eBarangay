@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 // Required environment variables
-const requiredEnvVars = ["MONGODB_URI", "JWT_SECRET", "PORT"];
+const requiredEnvVars = ["MONGODB_URI", "JWT_SECRET", "PORT", "SMTP_HOST", "SMTP_PORT", "SMTP_EMAIL", "SMTP_PASSWORD", "FROM_EMAIL", "FROM_NAME", "FRONTEND_URL"];
 
 // Optional environment variables with defaults
 const optionalEnvVars = {
@@ -50,6 +50,17 @@ export const getEnvConfig = () => {
       port: parseInt(process.env.PORT || "5000", 10),
       nodeEnv: process.env.NODE_ENV || "development",
       corsOrigin: process.env.CORS_ORIGIN || "*",
+    },
+    email: {
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT || "587", 10),
+      user: process.env.SMTP_EMAIL,
+      pass: process.env.SMTP_PASSWORD,
+      fromEmail: process.env.FROM_EMAIL,
+      fromName: process.env.FROM_NAME,
+    },
+    client: {
+      url: process.env.FRONTEND_URL,
     },
     isDevelopment: process.env.NODE_ENV !== "production",
     isProduction: process.env.NODE_ENV === "production",

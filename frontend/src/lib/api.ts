@@ -135,6 +135,20 @@ export const auth = {
   getStoredUser: getUser,
   getToken,
   isAuthenticated: (): boolean => !!getToken(),
+
+  forgotPassword: async (email: string) => {
+    return await apiClient("/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+  },
+
+  resetPassword: async (token: string, password: string) => {
+    return await apiClient(`/auth/reset-password/${token}`, {
+      method: "PUT",
+      body: JSON.stringify({ password }),
+    });
+  },
 };
 
 // Incidents API
