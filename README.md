@@ -76,6 +76,22 @@ npm run seed-announcements
 
 Backend runs on `http://localhost:5000`
 
+### Docker Deployment
+
+The project includes Docker configuration for easy deployment.
+
+```bash
+# Build and start containers
+docker-compose up -d --build
+
+# Stop containers
+docker-compose down
+```
+
+The application will be available at:
+- Frontend: `http://localhost:8080`
+- Backend: `http://localhost:5000`
+
 ## Environment Variables
 
 ### Frontend (`frontend/.env`)
@@ -87,10 +103,24 @@ VITE_API_URL=http://localhost:5000/api
 ### Backend (`backend/.env`)
 
 ```
+# Server Configuration
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/barangay-connect
-JWT_SECRET=your-secret-key
 NODE_ENV=development
+FRONTEND_URL=http://localhost:8080
+
+# Database
+MONGODB_URI=mongodb://localhost:27017/barangay-connect
+
+# Authentication
+JWT_SECRET=your-secret-key
+
+# Email Service (Brevo/Sendinblue)
+SMTP_HOST=smtp-relay.brevo.com
+SMTP_PORT=587
+SMTP_EMAIL=your-brevo-email
+SMTP_PASSWORD=your-brevo-smtp-key
+FROM_EMAIL=noreply@yourdomain.com
+FROM_NAME=Barangay Connect
 ```
 
 ## Scripts
@@ -134,6 +164,7 @@ NODE_ENV=development
 ## Features
 
 - User authentication and authorization
+- Password reset via email
 - Incident reporting system
 - Document request management
 - Polls and voting
