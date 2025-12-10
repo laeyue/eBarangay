@@ -1,0 +1,396 @@
+/* stylelint-disable-next-line at-rule-no-unknown */
+@tailwind base;
+/* stylelint-disable-next-line at-rule-no-unknown */
+@tailwind components;
+/* stylelint-disable-next-line at-rule-no-unknown */
+@tailwind utilities;
+
+/* Performance Optimization - Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* GPU acceleration for animations */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Parallax effect optimization */
+[style*="transform"] {
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Smooth scale transitions */
+.parallax-hero {
+  transform: translateZ(0);
+  transition: transform 0.05s ease-out;
+}
+
+/* Barangay Connect Hub - Complete Design System
+   User Theme: Blue (Trust & Community)
+   Admin Theme: Purple (Authority & Professional)
+*/
+
+@layer base {
+  :root {
+    /* USER THEME - Warm & Welcoming Community Colors */
+    --background: 220 17% 97%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* User Primary: Blue */
+    --primary: 221 83% 53%;
+    --primary-hover: 221 83% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    /* User Secondary: Green */
+    --secondary: 142 71% 45%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* User Accent: Blue (changed from Amber for consistency) */
+    --accent: 221 70% 96%;
+    --accent-foreground: 221 83% 25%;
+
+    --muted: 220 15% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 221 83% 53%;
+    --warning-foreground: 0 0% 100%;
+
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 221 83% 53%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  /* ADMIN THEME - Professional & Authoritative */
+  .admin-theme {
+    /* Admin Primary: Purple */
+    --primary: 262 83% 58%;
+    --primary-hover: 262 83% 48%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Admin Secondary: Pink */
+    --secondary: 330 81% 60%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Admin Accent: Cyan */
+    --accent: 189 94% 43%;
+    --accent-foreground: 0 0% 100%;
+
+    --background: 220 17% 94%;
+    --foreground: 222 84% 5%;
+
+    /* Dark purple sidebar */
+    --sidebar-background: 263 70% 15%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 262 83% 58%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 263 70% 20%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 263 70% 20%;
+    --sidebar-ring: 262 83% 58%;
+
+    --ring: 262 83% 58%;
+  }
+
+  .dark {
+    --background: 215 28% 17%;
+    --foreground: 210 20% 98%;
+
+    --card: 215 28% 20%;
+    --card-foreground: 210 20% 98%;
+
+    --popover: 215 28% 20%;
+    --popover-foreground: 210 20% 98%;
+
+    --primary: 201 96% 32%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 185 57% 50%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 215 28% 25%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 185 57% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 215 28% 30%;
+    --input: 215 28% 30%;
+    --ring: 201 96% 32%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    /* stylelint-disable-next-line at-rule-no-unknown */
+    @apply border-border;
+  }
+
+  body {
+    /* stylelint-disable-next-line at-rule-no-unknown */
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  /* Features section radial dot pattern texture - enhanced visibility */
+  .features-radial-pattern {
+    background-image: radial-gradient(
+        circle,
+        rgba(59, 130, 246, 0.15) 1.5px,
+        transparent 1.5px
+      ),
+      radial-gradient(circle, rgba(6, 182, 212, 0.08) 2px, transparent 2px),
+      radial-gradient(circle, rgba(34, 197, 94, 0.06) 1px, transparent 1px);
+    background-size: 45px 45px, 80px 80px, 25px 25px;
+    background-position: 0 0, 22px 22px, 0 0;
+  }
+
+  /* Enhanced radial dot pattern - high contrast version */
+  .features-radial-pattern-enhanced {
+    background-image: radial-gradient(
+        circle,
+        rgba(59, 130, 246, 0.18) 1.5px,
+        transparent 1.5px
+      ),
+      radial-gradient(circle, rgba(6, 182, 212, 0.12) 2.5px, transparent 2.5px),
+      radial-gradient(circle, rgba(34, 197, 94, 0.08) 1px, transparent 1px),
+      radial-gradient(circle, rgba(59, 130, 246, 0.1) 3px, transparent 3px);
+    background-size: 50px 50px, 85px 85px, 30px 30px, 120px 120px;
+    background-position: 0 0, 25px 25px, 10px 10px, 60px 60px;
+  }
+
+  /* Slower floating animation for large blobs */
+  @keyframes float-slow {
+    0%,
+    100% {
+      transform: translateY(0px) translateX(0px);
+    }
+    25% {
+      transform: translateY(-30px) translateX(10px);
+    }
+    50% {
+      transform: translateY(-50px) translateX(-10px);
+    }
+    75% {
+      transform: translateY(-30px) translateX(10px);
+    }
+  }
+
+  /* Splash particle fade out animation */
+  @keyframes particle-fade {
+    0% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(0.3);
+    }
+  }
+
+  /* Ripple splash effect */
+  @keyframes splash-ripple {
+    0% {
+      transform: scale(0);
+      opacity: 0.8;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 0;
+    }
+  }
+
+  /* Original float animation for compatibility */
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-25px);
+    }
+  }
+
+  /* Card interactive with enhanced hover effects */
+  [data-card="true"] {
+    position: relative;
+    z-index: 1;
+  }
+
+  [data-card="true"]:hover {
+    transform: translateY(-8px);
+  }
+
+  [data-card="true"] .absolute.inset-0.bg-gradient-to-r {
+    filter: blur(12px);
+  }
+
+  /* Responsive adjustments for blobs on smaller screens */
+  @media (max-width: 768px) {
+    .features-radial-pattern {
+      opacity: 0.4 !important;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .features-radial-pattern {
+      opacity: 0.25 !important;
+      background-size: 35px 35px, 60px 60px, 18px 18px;
+    }
+  }
+
+  /* Smooth transitions */
+  .transition-smooth {
+    /* stylelint-disable-next-line at-rule-no-unknown */
+    transition: all 200ms ease-out;
+  }
+
+  /* Hover lift effect */
+  .hover-lift {
+    /* stylelint-disable-next-line at-rule-no-unknown */
+    @apply transition-smooth hover:-translate-y-1 hover:shadow-lg;
+  }
+
+  /* Card styles */
+  .card-interactive {
+    /* stylelint-disable-next-line at-rule-no-unknown */
+    @apply bg-card rounded-xl shadow-md border border-border hover:shadow-xl hover:border-primary/50 transition-all duration-300;
+  }
+
+  /* Gradient backgrounds */
+  .gradient-user {
+    background: linear-gradient(
+      135deg,
+      hsl(221, 83%, 53%) 0%,
+      hsl(189, 94%, 43%) 100%
+    );
+  }
+
+  .gradient-admin {
+    background: linear-gradient(
+      135deg,
+      hsl(262, 83%, 58%) 0%,
+      hsl(263, 70%, 15%) 100%
+    );
+  }
+
+  /* Glass morphism effect */
+  .glass {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  /* Skeleton loading */
+  .skeleton {
+    /* stylelint-disable-next-line at-rule-no-unknown */
+    @apply animate-pulse bg-muted rounded;
+  }
+
+  /* Button animations */
+  .btn-scale {
+    /* stylelint-disable-next-line at-rule-no-unknown */
+    @apply active:scale-95 transition-transform;
+  }
+
+  /* Enhanced button hover effects */
+  .btn-hover-lift {
+    /* stylelint-disable-next-line at-rule-no-unknown */
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5;
+  }
+
+  .btn-hover-glow {
+    /* stylelint-disable-next-line at-rule-no-unknown */
+    @apply transition-all duration-300 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)];
+  }
+
+  .btn-hover-scale {
+    /* stylelint-disable-next-line at-rule-no-unknown */
+    @apply transition-transform duration-200 hover:scale-105 active:scale-95;
+  }
+}
+
+/* Custom animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(37, 99, 235, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 2s infinite;
+}

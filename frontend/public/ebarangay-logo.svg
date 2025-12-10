@@ -1,0 +1,29 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- House -->
+  <path d="M256 80L120 180V400H240V300H272V400H392V180L256 80Z" fill="#1E5A9E"/>
+  <path d="M256 100L140 190V380H220V280H292V380H372V190L256 100Z" fill="#2B7CD3"/>
+  <rect x="230" y="280" width="52" height="100" fill="#134A7E"/>
+  
+  <!-- Ground/Grass -->
+  <ellipse cx="256" cy="430" rx="150" ry="30" fill="#4CAF50"/>
+  
+  <!-- Location Pin -->
+  <circle cx="380" cy="220" r="50" fill="#F44336"/>
+  <circle cx="380" cy="220" r="35" fill="white"/>
+  <circle cx="380" cy="220" r="20" fill="#F44336"/>
+  
+  <!-- Circuit/Tech Lines -->
+  <g stroke="#FFC107" stroke-width="6" fill="none">
+    <path d="M450 300L480 300L480 340"/>
+    <circle cx="480" cy="350" r="10" fill="#FFC107"/>
+    <path d="M450 340L470 340"/>
+    <circle cx="480" cy="340" r="10" fill="#FFC107"/>
+    <path d="M460 280L490 280L490 320"/>
+    <circle cx="490" cy="330" r="10" fill="#FFC107"/>
+    <path d="M470 320L490 320"/>
+    <circle cx="500" cy="320" r="10" fill="#FFC107"/>
+  </g>
+  
+  <!-- Text -->
+  <text x="256" y="490" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#1A4B7E" text-anchor="middle">eBarangay</text>
+</svg>
