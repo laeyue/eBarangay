@@ -7,19 +7,18 @@ services:
     restart: unless-stopped
     ports:
       - "5000:5000"
-    networks:
-      - npm_default
     environment:
-      - MONGODB_URI
-      - JWT_SECRET
-      - PORT
-      - SMTP_HOST
-      - SMTP_PORT
-      - SMTP_EMAIL
-      - SMTP_PASSWORD
-      - FROM_EMAIL
-      - FROM_NAME
-      - FRONTEND_URL
+      - MONGODB_URI=${MONGODB_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - PORT=${PORT:-5000}
+      - NODE_ENV=${NODE_ENV:-production}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_EMAIL=${SMTP_EMAIL}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - FROM_EMAIL=${FROM_EMAIL}
+      - FROM_NAME=${FROM_NAME}
+      - FRONTEND_URL=${FRONTEND_URL}
 
   frontend:
     build: ./frontend
@@ -27,7 +26,6 @@ services:
     restart: unless-stopped
     ports:
       - "8888:80"
-      
     depends_on:
       - backend
 
