@@ -30,6 +30,25 @@ const upload = multer({
   },
 });
 
+// Configure multer for verification documents (images and PDFs)
+const verificationUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept images and PDF files
+    if (
+      file.mimetype.startsWith("image/") ||
+      file.mimetype === "application/pdf"
+    ) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only image and PDF files are allowed"));
+    }
+  },
+});
+
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET || "your-secret-key", {
     expiresIn: "30d",
@@ -254,7 +273,9 @@ router.put("/reset-password/:resetToken", async (req, res) => {
 
     await user.save();
 
-    res.status(200).json({ success: true, data: "Password updated successfully" });
+    res
+      .status(200)
+      .json({ success: true, data: "Password updated successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -290,6 +311,77 @@ router.post(
 
       res.json(userResponse);
     } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  }
+);
+
+// Submit verification documents
+router.post(
+  "/submit-verification",
+  protect,
+  verificationUpload.array("verificationDocuments", 10),
+  async (req: AuthRequest, res) => {
+    try {
+      if (!req.files || (req.files as Express.Multer.File[]).length === 0) {
+        return res.status(400).json({ message: "No files uploaded" });
+      }
+
+      const user = await User.findById(req.user._id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Convert files to base64 and save
+      const documents = (req.files as Express.Multer.File[]).map(
+        (file, index) => {
+          console.log(`Processing file ${index + 1}:`, {
+            originalname: file.originalname,
+            mimetype: file.mimetype,
+            size: file.size,
+            bufferLength: file.buffer.length,
+          });
+
+          const fileBuffer = file.buffer;
+          const base64String = fileBuffer.toString("base64");
+          const dataUrl = `data:${file.mimetype};base64,${base64String}`;
+
+          console.log(
+            `File ${index + 1} encoded. DataURL length:`,
+            dataUrl.length
+          );
+          console.log(`DataURL preview:`, dataUrl.substring(0, 100) + "...");
+
+          return {
+            url: dataUrl,
+            documentType: file.originalname,
+            uploadedAt: new Date(),
+          };
+        }
+      );
+
+      // Update user verification documents and status
+      (user as any).verificationDocuments = documents;
+      (user as any).verificationStatus = "pending";
+
+      console.log(
+        `Saving ${documents.length} documents for user ${user.email}`
+      );
+      await user.save();
+
+      console.log("Documents saved successfully");
+
+      const userResponse = user.toObject();
+      delete userResponse.password;
+
+      console.log(
+        "Verification documents in response:",
+        userResponse.verificationDocuments?.length
+      );
+
+      res.json(userResponse);
+    } catch (error) {
+      console.error("Verification upload error:", error);
       res.status(500).json({ message: error.message });
     }
   }

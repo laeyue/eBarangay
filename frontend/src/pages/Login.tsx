@@ -134,7 +134,13 @@ const Login = () => {
             <img
               src="/ebarangay-logo.svg"
               alt="eBarangay Logo"
-              className="h-16 w-16 mb-4 drop-shadow-lg filter brightness-110"
+              className="h-16 w-16 mb-4 drop-shadow-lg filter brightness-110 group-hover:scale-110 group-hover:drop-shadow-2xl transition-all duration-300 cursor-pointer hover:scale-110 hover:drop-shadow-2xl"
+              onClick={() => {
+                navigate("/");
+                setTimeout(() => {
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }, 0);
+              }}
             />
             <h1 className="text-4xl font-bold mb-3 leading-tight drop-shadow-lg">
               Welcome to
@@ -204,7 +210,13 @@ const Login = () => {
             <img
               src="/ebarangay-logo.svg"
               alt="eBarangay Logo"
-              className="h-16 w-16 mx-auto mb-4"
+              className="h-16 w-16 mx-auto mb-4 cursor-pointer hover:scale-110 hover:drop-shadow-lg transition-all duration-300"
+              onClick={() => {
+                navigate("/");
+                setTimeout(() => {
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }, 0);
+              }}
             />
             <h2 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-cyan-500 bg-clip-text text-transparent">
               BarangayConnect

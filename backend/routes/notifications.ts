@@ -209,14 +209,18 @@ router.get("/unread-count", protect, async (req, res) => {
       const activePollIds = activePolls.map((p) => p._id);
 
       // Get unread notifications only for active polls
-      const activePollNotifications = await Notification.find({
-        userId: req.user._id,
-        read: false,
-        relatedEntityId: { $in: activePollIds },
-        $or: [{ type: "poll" }, { relatedEntityType: "poll" }],
-      });
+      // If no active polls exist, count should be 0
+      let count = 0;
+      if (activePollIds.length > 0) {
+        const activePollNotifications = await Notification.find({
+          userId: req.user._id,
+          read: false,
+          relatedEntityId: { $in: activePollIds },
+          $or: [{ type: "poll" }, { relatedEntityType: "poll" }],
+        });
+        count = activePollNotifications.length;
+      }
 
-      const count = activePollNotifications.length;
       return res.json({ count });
     }
 
@@ -233,7 +237,7 @@ router.get("/unread-count", protect, async (req, res) => {
     res.json({ count });
   } catch (error) {
     console.error("Error getting unread count:", error);
-    res.status(500).json({ message: error.message });
+    res.json({ count: 0 });
   }
 });
 

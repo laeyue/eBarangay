@@ -58,6 +58,22 @@ const userSchema = new Schema<any>({
     type: Date,
     default: null,
   },
+  verificationDocuments: [
+    {
+      url: {
+        type: String,
+        required: true,
+      },
+      documentType: {
+        type: String,
+        default: "",
+      },
+      uploadedAt: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
   profilePicture: {
     type: String,
     default: null,

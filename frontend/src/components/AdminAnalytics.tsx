@@ -52,10 +52,17 @@ export const AdminAnalytics = ({
   }, {});
 
   const incidentTypeData = Object.entries(incidentsByType).map(
-    ([name, value]) => ({
-      name: name.charAt(0).toUpperCase() + name.slice(1),
-      value,
-    })
+    ([name, value]) => {
+      // Format compound words like "public-safety" to "Public Safety"
+      const formatted = name
+        .split("-")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+      return {
+        name: formatted,
+        value,
+      };
+    }
   );
 
   // Incidents by priority
@@ -66,10 +73,19 @@ export const AdminAnalytics = ({
   }, {});
 
   const incidentPriorityData = Object.entries(incidentsByPriority).map(
-    ([name, value]) => ({
-      name: name.charAt(0).toUpperCase() + name.slice(1),
-      value,
-    })
+    ([name, value]) => {
+      // Properly capitalize priority levels
+      const priorityMap: { [key: string]: string } = {
+        low: "Low",
+        medium: "Medium",
+        high: "High",
+        critical: "Critical",
+      };
+      return {
+        name: priorityMap[name] || name.charAt(0).toUpperCase() + name.slice(1),
+        value,
+      };
+    }
   );
 
   // Incidents by status

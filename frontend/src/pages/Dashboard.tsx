@@ -42,6 +42,7 @@ type User = {
   firstName: string;
   lastName: string;
   role: string;
+  profilePicture?: string;
 };
 
 type Incident = {
@@ -51,6 +52,7 @@ type Incident = {
   location?: string;
   status: string;
   createdAt: string;
+  adminNotes?: string;
 };
 
 type DocumentRequest = {
@@ -59,6 +61,7 @@ type DocumentRequest = {
   status: string;
   purpose?: string;
   createdAt: string;
+  adminNotes?: string;
 };
 
 const getStatusBadge = (status: string) => {
@@ -474,13 +477,21 @@ const Dashboard = () => {
       <nav className="sticky top-0 z-50 border-b border-gradient-to-r from-blue-200 to-cyan-200 bg-white/98 backdrop-blur supports-[backdrop-filter]:bg-white/95 shadow-lg">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div
+              className="flex items-center gap-3 group cursor-pointer"
+              onClick={() => {
+                navigate("/");
+                setTimeout(() => {
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }, 0);
+              }}
+            >
               <img
                 src="/ebarangay-logo.svg"
                 alt="BarangayConnect"
-                className="h-10 w-10 rounded-lg shadow-lg"
+                className="h-10 w-10 rounded-lg shadow-lg group-hover:shadow-2xl transition-all group-hover:scale-110"
               />
-              <span className="font-bold text-xl bg-gradient-to-r from-blue-700 to-cyan-600 bg-clip-text text-transparent">
+              <span className="font-bold text-xl bg-gradient-to-r from-blue-700 to-cyan-600 bg-clip-text text-transparent group-hover:from-blue-800 group-hover:to-cyan-700 transition-all duration-300">
                 BarangayConnect
               </span>
             </div>
@@ -665,7 +676,7 @@ const Dashboard = () => {
               </CardHeader>
               <CardContent className="pt-4">
                 <div className="space-y-3">
-                  {filteredIncidents.slice(0, 5).map((incident, idx) => (
+                  {filteredIncidents.map((incident, idx) => (
                     <div
                       key={incident._id}
                       className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-br from-blue-50/80 to-white hover:from-blue-100 hover:to-blue-50 transition-all border-2 border-blue-100 hover:border-blue-300 hover:shadow-lg cursor-pointer group"
@@ -705,16 +716,6 @@ const Dashboard = () => {
                     </div>
                   ))}
                 </div>
-                {filteredIncidents.length > 5 && (
-                  <Button
-                    variant="ghost"
-                    className="w-full mt-4 text-primary hover:text-blue-700 hover:bg-blue-100 transition-all btn-scale font-medium"
-                    onClick={() => navigate("/report-incident")}
-                  >
-                    View All {filteredIncidents.length} Incidents
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                )}
               </CardContent>
             </Card>
           )}

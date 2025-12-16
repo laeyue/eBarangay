@@ -202,6 +202,8 @@ const ReportIncident = () => {
       data.append("title", validation.data.title);
       data.append("description", validation.data.description);
       data.append("location", validation.data.location);
+      data.append("type", formData.type);
+      data.append("priority", formData.priority);
 
       if (photoFile) {
         data.append("photo", photoFile);
@@ -520,7 +522,7 @@ const ReportIncident = () => {
                         <SelectItem value="low">Low</SelectItem>
                         <SelectItem value="medium">Medium</SelectItem>
                         <SelectItem value="high">High</SelectItem>
-                        <SelectItem value="emergency">Emergency</SelectItem>
+                        <SelectItem value="critical">Critical</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
