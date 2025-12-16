@@ -63,7 +63,7 @@ const NotificationsEnhanced = () => {
         notifications.getAll(1, 100, true, "sms"),
         notifications.getUnreadCount("sms"),
       ]);
-      
+
       setSmsAlerts(smsData.alerts || []);
 
       // Process unread notifications to get IDs
@@ -73,9 +73,9 @@ const NotificationsEnhanced = () => {
       const unreadIds = unreadList
         .filter((n: any) => n?.relatedEntityId)
         .map((n: any) => String(n.relatedEntityId));
-      
+
       console.log("🔔 Extracted unread IDs:", unreadIds);
-      
+
       setUnreadSmsIds(unreadIds);
 
       // Fetch unread SMS count
@@ -89,7 +89,8 @@ const NotificationsEnhanced = () => {
     } finally {
       setLoading(false);
     }
-  };  const isSmsUnread = (id: string) => {
+  };
+  const isSmsUnread = (id: string) => {
     return unreadSmsIds.includes(String(id));
   };
 

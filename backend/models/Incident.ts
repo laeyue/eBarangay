@@ -24,6 +24,7 @@ const incidentSchema = new Schema<any>({
     type: String,
     enum: [
       "crime",
+      "public-safety",
       "infrastructure",
       "health",
       "environment",

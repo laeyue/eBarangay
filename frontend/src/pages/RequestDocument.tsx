@@ -158,7 +158,7 @@ const RequestDocument = () => {
       await documents.create({
         documentType: validation.data.documentType,
         purpose: validation.data.purpose,
-        notes: notes || undefined,
+        notes: notes,
       });
       toast.success("Document request submitted successfully!");
       navigate("/dashboard");

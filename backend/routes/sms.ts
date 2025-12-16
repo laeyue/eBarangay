@@ -37,6 +37,7 @@ router.get("/", protect, async (req, res) => {
 
     const alerts = await SmsAlert.find(query)
       .populate("sentBy", "firstName lastName email role")
+      .populate("specificRecipients", "firstName lastName email")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);

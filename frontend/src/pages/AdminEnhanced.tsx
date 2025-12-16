@@ -81,6 +81,7 @@ export default function AdminEnhanced() {
   const [userStatusFilter, setUserStatusFilter] = useState<string>("all");
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [showUserDialog, setShowUserDialog] = useState(false);
+  const [zoomedProfilePic, setZoomedProfilePic] = useState<string | null>(null);
 
   // Incidents state
   const [incidents, setIncidents] = useState<any[]>([]);
@@ -162,6 +163,7 @@ export default function AdminEnhanced() {
 
   // Verification state
   const [verificationData, setVerificationData] = useState<any[]>([]);
+  const [allVerificationData, setAllVerificationData] = useState<any[]>([]);
   const [verificationPage, setVerificationPage] = useState(1);
   const [verificationFilter, setVerificationFilter] =
     useState<string>("pending");
@@ -183,7 +185,12 @@ export default function AdminEnhanced() {
 
   // Refetch verification data when filter or search changes
   useEffect(() => {
-    fetchVerificationData();
+    // Apply filters to existing data without refetching
+    applyVerificationFilters(
+      allVerificationData,
+      verificationFilter,
+      verificationSearch
+    );
   }, [verificationFilter, verificationSearch]);
 
   // Refetch incidents when search changes
@@ -374,34 +381,15 @@ export default function AdminEnhanced() {
   const fetchVerificationData = async () => {
     try {
       const data = await admin.getUsers(verificationPage, 100);
-      // Filter users by verification status and search term
-      let filteredUsers = data.users;
+      // Store all data for filtering
+      setAllVerificationData(data.users);
 
-      // Apply status filter
-      if (verificationFilter === "pending") {
-        filteredUsers = filteredUsers.filter(
-          (user: any) => user.verificationStatus === "pending"
-        );
-      } else if (verificationFilter === "rejected") {
-        filteredUsers = filteredUsers.filter(
-          (user: any) => user.verificationStatus === "rejected"
-        );
-      } else if (verificationFilter === "verified") {
-        filteredUsers = filteredUsers.filter((user: any) => user.isVerified);
-      }
-
-      // Apply search filter
-      if (verificationSearch.trim()) {
-        const searchTerm = verificationSearch.toLowerCase();
-        filteredUsers = filteredUsers.filter(
-          (user: any) =>
-            user.name?.toLowerCase().includes(searchTerm) ||
-            user.email?.toLowerCase().includes(searchTerm) ||
-            user.phone?.toLowerCase().includes(searchTerm)
-        );
-      }
-
-      setVerificationData(filteredUsers);
+      // Apply filters to displayed data
+      applyVerificationFilters(
+        data.users,
+        verificationFilter,
+        verificationSearch
+      );
     } catch (error: any) {
       toast({
         title: "Error",
@@ -409,6 +397,41 @@ export default function AdminEnhanced() {
         variant: "destructive",
       });
     }
+  };
+
+  // Apply filters without needing to refetch
+  const applyVerificationFilters = (
+    users: any[],
+    filter: string,
+    search: string
+  ) => {
+    let filteredUsers = users;
+
+    // Apply status filter
+    if (filter === "pending") {
+      filteredUsers = filteredUsers.filter(
+        (user: any) => user.verificationStatus === "pending"
+      );
+    } else if (filter === "rejected") {
+      filteredUsers = filteredUsers.filter(
+        (user: any) => user.verificationStatus === "rejected"
+      );
+    } else if (filter === "verified") {
+      filteredUsers = filteredUsers.filter((user: any) => user.isVerified);
+    }
+
+    // Apply search filter
+    if (search.trim()) {
+      const searchTerm = search.toLowerCase();
+      filteredUsers = filteredUsers.filter(
+        (user: any) =>
+          user.name?.toLowerCase().includes(searchTerm) ||
+          user.email?.toLowerCase().includes(searchTerm) ||
+          user.phone?.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    setVerificationData(filteredUsers);
   };
 
   const updateUserVerification = async (
@@ -1149,15 +1172,23 @@ export default function AdminEnhanced() {
 
           <div className="relative flex items-center justify-between text-white p-10 rounded-3xl shadow-2xl border border-purple-400/30 backdrop-blur-sm">
             <div className="space-y-3">
-              <div className="flex items-center gap-4">
-                <div className="bg-white/20 p-4 rounded-2xl backdrop-blur border border-white/30 shadow-lg">
+              <div
+                className="flex items-center gap-4 group cursor-pointer"
+                onClick={() => {
+                  navigate("/");
+                  setTimeout(() => {
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }, 0);
+                }}
+              >
+                <div className="bg-white/20 p-4 rounded-2xl backdrop-blur border border-white/30 shadow-lg group-hover:shadow-2xl transition-all group-hover:scale-110">
                   <Megaphone className="w-8 h-8 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-5xl font-black text-white drop-shadow-lg">
+                  <h1 className="text-5xl font-black text-white drop-shadow-lg group-hover:drop-shadow-xl transition-all duration-300">
                     eBarangay Admin Panel
                   </h1>
-                  <p className="text-white/75 drop-shadow text-base font-medium mt-1">
+                  <p className="text-white/75 drop-shadow text-base font-medium mt-1 group-hover:text-white/85 transition-all duration-300">
                     Comprehensive management system for barangay operations
                   </p>
                 </div>
@@ -1409,7 +1440,7 @@ export default function AdminEnhanced() {
             </TabsTrigger>
             <TabsTrigger
               value="polls"
-              className="data-[state=active]:bg-purple-600 data-[state=active]:text-white"
+              className="data-[state=active]:bg-purple-600 data-[state=active]:text-white relative"
             >
               <Vote className="w-4 h-4 mr-2" />
               Polls
@@ -1554,7 +1585,27 @@ export default function AdminEnhanced() {
                           className="border-purple-100 hover:bg-purple-50"
                         >
                           <TableCell className="font-medium text-purple-900">
-                            {user.firstName} {user.lastName}
+                            <div className="flex items-center justify-between gap-3">
+                              <span>
+                                {user.firstName} {user.lastName}
+                              </span>
+                              {user.profilePicture ? (
+                                <img
+                                  src={user.profilePicture}
+                                  alt={`${user.firstName} ${user.lastName}`}
+                                  className="h-8 w-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-purple-500 transition-all"
+                                  onClick={() =>
+                                    setZoomedProfilePic(user.profilePicture)
+                                  }
+                                />
+                              ) : (
+                                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white font-bold text-sm cursor-pointer hover:ring-2 hover:ring-purple-500 transition-all">
+                                  {(
+                                    user.firstName?.charAt(0) || "U"
+                                  ).toUpperCase()}
+                                </div>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell>{user.email}</TableCell>
                           <TableCell>{user.phoneNumber || "N/A"}</TableCell>
@@ -1693,6 +1744,9 @@ export default function AdminEnhanced() {
                         Reporter
                       </TableHead>
                       <TableHead className="text-purple-900 font-bold">
+                        Location
+                      </TableHead>
+                      <TableHead className="text-purple-900 font-bold">
                         Status
                       </TableHead>
                       <TableHead className="text-purple-900 font-bold">
@@ -1738,6 +1792,7 @@ export default function AdminEnhanced() {
                             {incident.userId?.firstName}{" "}
                             {incident.userId?.lastName}
                           </TableCell>
+                          <TableCell>{incident.location || "N/A"}</TableCell>
                           <TableCell>
                             {getStatusBadge(incident.status)}
                           </TableCell>
@@ -2111,7 +2166,15 @@ export default function AdminEnhanced() {
                           <TableCell>
                             {getPriorityBadge(alert.priority)}
                           </TableCell>
-                          <TableCell>{alert.sentCount || 0} users</TableCell>
+                          <TableCell>
+                            {alert.recipients === "specific"
+                              ? `${alert.specificRecipients?.length || 0} users`
+                              : alert.recipients === "all"
+                              ? "All users"
+                              : alert.recipients === "active"
+                              ? "Active users"
+                              : `${alert.sentCount || 0} users`}
+                          </TableCell>
                           <TableCell>
                             {new Date(alert.createdAt).toLocaleDateString()}
                           </TableCell>
@@ -2688,7 +2751,27 @@ export default function AdminEnhanced() {
                           className="border-purple-100 hover:bg-purple-50"
                         >
                           <TableCell className="font-medium text-purple-900">
-                            {user.firstName} {user.lastName}
+                            <div className="flex items-center justify-between gap-3">
+                              <span>
+                                {user.firstName} {user.lastName}
+                              </span>
+                              {user.profilePicture ? (
+                                <img
+                                  src={user.profilePicture}
+                                  alt={`${user.firstName} ${user.lastName}`}
+                                  className="h-8 w-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-purple-500 transition-all"
+                                  onClick={() =>
+                                    setZoomedProfilePic(user.profilePicture)
+                                  }
+                                />
+                              ) : (
+                                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white font-bold text-sm cursor-pointer hover:ring-2 hover:ring-purple-500 transition-all">
+                                  {(
+                                    user.firstName?.charAt(0) || "U"
+                                  ).toUpperCase()}
+                                </div>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell>{user.email}</TableCell>
                           <TableCell>{user.phoneNumber || "N/A"}</TableCell>
@@ -3408,6 +3491,37 @@ export default function AdminEnhanced() {
                   </Label>
                   <p>{selectedIncident.description}</p>
                 </div>
+
+                {/* Uploaded Image */}
+                {selectedIncident.photoUrl && (
+                  <div className="bg-blue-50 p-4 rounded-lg space-y-3">
+                    <Label className="font-bold text-purple-900">
+                      Uploaded Image:
+                    </Label>
+                    <div className="flex items-center justify-between bg-white p-3 rounded border border-blue-200 hover:border-blue-400 transition-colors">
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-blue-900">
+                          Incident Photo
+                        </p>
+                        <p className="text-xs text-blue-700">
+                          Uploaded:{" "}
+                          {new Date(
+                            selectedIncident.createdAt
+                          ).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() =>
+                          setZoomedProfilePic(selectedIncident.photoUrl)
+                        }
+                        className="text-blue-600 hover:text-blue-800 underline text-sm font-medium ml-3 px-3 py-1 hover:bg-blue-100 rounded transition-colors"
+                      >
+                        View
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <Label className="font-bold text-purple-900">
                     Current Status:
@@ -4029,6 +4143,57 @@ export default function AdminEnhanced() {
                   </div>
                 </div>
 
+                {/* Uploaded Documents Section - Always visible */}
+                <div className="bg-blue-50 p-4 rounded-lg space-y-3">
+                  <div>
+                    <p className="text-xs font-bold text-blue-900 uppercase">
+                      Uploaded Verification Documents
+                    </p>
+                    {selectedVerification?.verificationDocuments &&
+                    selectedVerification.verificationDocuments.length > 0 ? (
+                      <div className="mt-3 space-y-2">
+                        {selectedVerification.verificationDocuments.map(
+                          (doc: any, idx: number) => (
+                            <div
+                              key={idx}
+                              className="flex items-center justify-between bg-white p-3 rounded border border-blue-200 hover:border-blue-400 transition-colors"
+                            >
+                              <div className="flex-1">
+                                <p className="text-sm font-semibold text-blue-900">
+                                  {doc.documentType || `Document ${idx + 1}`}
+                                </p>
+                                <p className="text-xs text-blue-700">
+                                  Uploaded:{" "}
+                                  {doc.uploadedAt
+                                    ? new Date(
+                                        doc.uploadedAt
+                                      ).toLocaleDateString()
+                                    : "N/A"}
+                                </p>
+                              </div>
+                              <button
+                                onClick={() => setZoomedProfilePic(doc.url)}
+                                className="text-blue-600 hover:text-blue-800 underline text-sm font-medium ml-3 px-3 py-1 hover:bg-blue-100 rounded transition-colors"
+                              >
+                                View
+                              </button>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    ) : (
+                      <div className="mt-3 text-center py-4 bg-gray-50 rounded border border-dashed border-gray-300">
+                        <p className="text-sm text-gray-600">
+                          No verification documents uploaded yet
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          User needs to submit documents from their profile page
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <div className="space-y-3">
                   <Label
                     htmlFor="verification-status"
@@ -4133,6 +4298,51 @@ export default function AdminEnhanced() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Document Viewer Modal - Fullscreen */}
+        {zoomedProfilePic && (
+          <div
+            className="fixed inset-0 z-[9999] bg-black flex items-center justify-center p-0 m-0"
+            style={{ width: "100vw", height: "100vh" }}
+            onClick={() => setZoomedProfilePic(null)}
+          >
+            <button
+              onClick={() => setZoomedProfilePic(null)}
+              className="absolute top-6 right-6 text-white hover:text-gray-300 text-4xl font-bold z-[10000] transition-colors"
+              title="Close (ESC)"
+            >
+              ×
+            </button>
+            {zoomedProfilePic.includes("application/pdf") ? (
+              <iframe
+                src={zoomedProfilePic}
+                className="w-[90vw] h-[90vh]"
+                title="PDF Document"
+                onClick={(e) => e.stopPropagation()}
+              />
+            ) : (
+              <img
+                src={zoomedProfilePic}
+                alt="Document"
+                className="max-w-[90vw] max-h-[90vh] object-contain"
+                onClick={(e) => e.stopPropagation()}
+                onError={(e) => {
+                  console.error("Image failed to load");
+                  const target = e.currentTarget;
+                  target.style.display = "none";
+                  const errorDiv = document.createElement("div");
+                  errorDiv.className = "text-white text-center";
+                  errorDiv.innerHTML =
+                    '<p class="text-xl mb-2">Failed to load image</p><p class="text-sm">The image data may be corrupted or invalid</p>';
+                  target.parentElement?.appendChild(errorDiv);
+                }}
+              />
+            )}
+            <p className="absolute bottom-6 left-1/2 transform -translate-x-1/2 text-gray-400 text-sm">
+              Click or press ESC to close
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

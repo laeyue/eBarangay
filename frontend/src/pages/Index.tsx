@@ -37,8 +37,8 @@ const Index = () => {
   const { splashParticles } = useBackgroundInteraction(featuresRef);
   const [stats, setStats] = useState<Stats>({
     activeResidents: 10500,
-    connectedBarangays: 50,
-    satisfactionRate: 99,
+    connectedBarangays: 44,
+    satisfactionRate: 67,
   });
   const [loading, setLoading] = useState(true);
   const [parallaxScale, setParallaxScale] = useState(1);
@@ -183,7 +183,10 @@ const Index = () => {
           <div className="container mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
               {/* Logo Section */}
-              <div className="flex items-center gap-3 group cursor-pointer">
+              <div
+                className="flex items-center gap-3 group cursor-pointer"
+                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              >
                 <img
                   src="/ebarangay-logo.svg"
                   alt="eBarangay Logo"

@@ -30,6 +30,7 @@ import {
   Camera,
   AlertCircle,
   Clock,
+  FileText,
 } from "lucide-react";
 
 const Profile = () => {
@@ -58,13 +59,13 @@ const Profile = () => {
     return storedUser?.profilePicture || null;
   });
   const [uploadingPicture, setUploadingPicture] = useState(false);
-  const [verificationDocument, setVerificationDocument] = useState<File | null>(
-    null
-  );
+  const [verificationDocuments, setVerificationDocuments] = useState<
+    Array<{ file: File; type: string }>
+  >([]);
   const [uploadingVerification, setUploadingVerification] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState<
-    "pending" | "approved" | "rejected"
-  >("pending");
+    "not-started" | "pending" | "approved" | "rejected" | null
+  >(null);
   const [verificationMessage, setVerificationMessage] = useState<string | null>(
     null
   );
@@ -102,7 +103,7 @@ const Profile = () => {
           setPhoneNumber(fullUser.phoneNumber || "");
           setAddress(fullUser.address || "");
           setProfilePicture(fullUser.profilePicture || null);
-          setVerificationStatus(fullUser.verificationStatus || "pending");
+          setVerificationStatus(fullUser.verificationStatus || "not-started");
           setVerificationMessage(fullUser.verificationMessage || null);
           setVerificationDate(fullUser.verificationDate || null);
           setVerificationNotes(fullUser.verificationNotes || null);
@@ -151,7 +152,9 @@ const Profile = () => {
               localStorage.setItem("user", JSON.stringify(fullUser));
 
               // Update verification status if it has changed
-              setVerificationStatus(fullUser.verificationStatus || "pending");
+              setVerificationStatus(
+                fullUser.verificationStatus || "not-started"
+              );
               setVerificationMessage(fullUser.verificationMessage || null);
               setVerificationDate(fullUser.verificationDate || null);
               setVerificationNotes(fullUser.verificationNotes || null);
@@ -361,32 +364,75 @@ const Profile = () => {
       return;
     }
 
-    setVerificationDocument(file);
+    // Add document to the list
+    const documentType =
+      e.currentTarget.previousElementSibling?.textContent || "Document";
+    setVerificationDocuments([
+      ...verificationDocuments,
+      { file, type: documentType.trim() },
+    ]);
+
+    // Reset input
+    e.target.value = "";
+  };
+
+  const removeVerificationDocument = (index: number) => {
+    setVerificationDocuments(
+      verificationDocuments.filter((_, i) => i !== index)
+    );
   };
 
   const handleSubmitVerification = async () => {
-    if (!verificationDocument) {
-      toast.error("Please select a verification document");
+    if (verificationDocuments.length === 0) {
+      toast.error("Please upload at least one verification document");
       return;
     }
 
     setUploadingVerification(true);
 
     try {
-      // Create form data
+      // Create form data with all documents
       const formData = new FormData();
-      formData.append("verificationDocument", verificationDocument);
+      verificationDocuments.forEach((doc) => {
+        formData.append(`verificationDocuments`, doc.file);
+      });
 
-      // TODO: Implement verification upload API endpoint
-      await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate API call
-
-      setVerificationStatus("pending");
-      setVerificationDocument(null);
-      toast.success(
-        "Verification document submitted! We'll review it within 24-48 hours."
+      // Submit verification documents to backend
+      const response = await fetch(
+        `${
+          import.meta.env.VITE_API_URL || "http://localhost:5000/api"
+        }/auth/submit-verification`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: formData,
+        }
       );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to submit verification");
+      }
+
+      const updatedUser = await response.json();
+
+      // Update local storage and state
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setUser(updatedUser);
+      setVerificationStatus(updatedUser.verificationStatus || "pending");
+      setVerificationDocuments([]);
+
+      toast.success(
+        "Verification documents submitted! We'll review them within 24-48 hours."
+      );
+
+      // Trigger a verification update event
+      window.dispatchEvent(new Event("verificationUpdated"));
     } catch (error: any) {
-      toast.error(error.message || "Failed to submit verification document");
+      console.error("Verification submission error:", error);
+      toast.error(error.message || "Failed to submit verification documents");
     } finally {
       setUploadingVerification(false);
     }
@@ -722,29 +768,28 @@ const Profile = () => {
         </Card>
 
         {/* Resident Verification */}
-        {verificationStatus !== "approved" && (
-          <Card
-            className="border-2 shadow-xl card-interactive animate-fade-in overflow-hidden"
-            style={{ animationDelay: "150ms" }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-orange-500/5 pointer-events-none" />
-            <CardHeader className="relative">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-md flex-shrink-0">
-                  <Shield className="w-6 h-6 text-white" />
-                </div>
-                <div className="flex-1">
-                  <CardTitle className="text-xl">
-                    Resident Verification
-                  </CardTitle>
-                  <CardDescription>
-                    Verify your residency status to access more features
-                  </CardDescription>
-                </div>
+        <Card
+          className="border-2 shadow-xl card-interactive animate-fade-in overflow-hidden"
+          style={{ animationDelay: "150ms" }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-orange-500/5 pointer-events-none" />
+          <CardHeader className="relative">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-md flex-shrink-0">
+                <Shield className="w-6 h-6 text-white" />
               </div>
-            </CardHeader>
-            <CardContent className="relative">
-              {verificationStatus === "pending" ? (
+              <div className="flex-1">
+                <CardTitle className="text-xl">Resident Verification</CardTitle>
+                <CardDescription>
+                  Verify your residency status to access more features
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="relative">
+            {(() => {
+              console.log("Current verification status:", verificationStatus);
+              return verificationStatus === "pending" ? (
                 <div className="space-y-4">
                   <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-5">
                     <div className="flex items-start gap-4">
@@ -798,6 +843,57 @@ const Profile = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Show submitted documents */}
+                  {(() => {
+                    console.log("User object:", user);
+                    console.log(
+                      "Verification documents:",
+                      user?.verificationDocuments
+                    );
+                    return (
+                      user?.verificationDocuments &&
+                      user.verificationDocuments.length > 0 && (
+                        <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-xl p-5">
+                          <div className="flex items-start gap-4">
+                            <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-green-900 dark:text-green-100 mb-3">
+                                Submitted Documents (
+                                {user.verificationDocuments.length})
+                              </p>
+                              <div className="space-y-2">
+                                {user.verificationDocuments.map(
+                                  (doc: any, index: number) => (
+                                    <div
+                                      key={index}
+                                      className="flex items-center justify-between bg-white dark:bg-green-950/40 p-3 rounded-lg border border-green-200 dark:border-green-800"
+                                    >
+                                      <div className="flex items-center gap-3 flex-1">
+                                        <FileText className="h-5 w-5 text-green-600" />
+                                        <div>
+                                          <p className="text-sm font-medium text-green-900 dark:text-green-100">
+                                            {doc.documentType ||
+                                              `Document ${index + 1}`}
+                                          </p>
+                                          <p className="text-xs text-green-700 dark:text-green-300">
+                                            Uploaded:{" "}
+                                            {new Date(
+                                              doc.uploadedAt
+                                            ).toLocaleDateString()}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    );
+                  })()}
                 </div>
               ) : verificationStatus === "rejected" ? (
                 <div className="space-y-4">
@@ -853,7 +949,7 @@ const Profile = () => {
                       <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                       <div>
                         <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
-                          Required Documents (any one):
+                          Required Documents:
                         </p>
                         <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
                           <li>• Barangay Certificate of Residency</li>
@@ -867,43 +963,216 @@ const Profile = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="verification-doc-retry"
-                      className="text-sm font-medium"
-                    >
-                      Upload New Verification Document
-                    </Label>
-                    <Input
-                      id="verification-doc-retry"
-                      type="file"
-                      accept="image/*,.pdf"
-                      onChange={handleVerificationUpload}
-                      className="h-11 border-2 focus:border-primary"
-                    />
-                    {verificationDocument && (
-                      <p className="text-sm text-muted-foreground flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        {verificationDocument.name} selected
-                      </p>
-                    )}
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">
+                        Barangay ID / Residency Certificate
+                      </Label>
+                      <Input
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={handleVerificationUpload}
+                        className="h-11 border-2 focus:border-primary"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">
+                        Utility Bill (Water/Electric/Internet)
+                      </Label>
+                      <Input
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={handleVerificationUpload}
+                        className="h-11 border-2 focus:border-primary"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">
+                        Valid ID (Driver's License/Passport)
+                      </Label>
+                      <Input
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={handleVerificationUpload}
+                        className="h-11 border-2 focus:border-primary"
+                      />
+                    </div>
                   </div>
+
+                  {/* Uploaded Documents List */}
+                  {verificationDocuments.length > 0 && (
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium text-green-700">
+                        Uploaded Documents ({verificationDocuments.length})
+                      </Label>
+                      <div className="space-y-2">
+                        {verificationDocuments.map((doc, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between bg-green-50 dark:bg-green-950/20 p-3 rounded-lg border border-green-200 dark:border-green-800"
+                          >
+                            <div className="flex items-center gap-3 flex-1">
+                              <CheckCircle2 className="h-5 w-5 text-green-600" />
+                              <div>
+                                <p className="text-sm font-medium text-green-900 dark:text-green-100">
+                                  {doc.file.name}
+                                </p>
+                                <p className="text-xs text-green-700 dark:text-green-300">
+                                  {(doc.file.size / 1024 / 1024).toFixed(2)} MB
+                                </p>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => removeVerificationDocument(index)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 rounded px-2 py-1 transition-colors"
+                              type="button"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   <Button
                     onClick={handleSubmitVerification}
-                    disabled={!verificationDocument || uploadingVerification}
+                    disabled={
+                      verificationDocuments.length === 0 ||
+                      uploadingVerification
+                    }
                     className="w-full h-11 text-base btn-scale bg-gradient-to-r from-amber-500 to-red-500 hover:from-amber-600 hover:to-red-600 text-white"
                   >
                     <Upload className="w-5 h-5 mr-2" />
                     {uploadingVerification
                       ? "Resubmitting..."
-                      : "Resubmit for Verification"}
+                      : `Resubmit ${verificationDocuments.length} Document${
+                          verificationDocuments.length !== 1 ? "s" : ""
+                        }`}
                   </Button>
                 </div>
-              ) : null}
-            </CardContent>
-          </Card>
-        )}
+              ) : (
+                // Default: Show upload form for not-started or any other status except pending/rejected
+                <div className="space-y-4">
+                  <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-xl p-5">
+                    <div className="flex items-start gap-4">
+                      <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
+                          Start Your Verification Process
+                        </p>
+                        <p className="text-sm text-blue-800 dark:text-blue-200 mb-3">
+                          Upload proof of residency to unlock exclusive features
+                          and access resident-only services.
+                        </p>
+                        <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1 ml-4 list-disc">
+                          <li>Barangay ID or Residency Certificate</li>
+                          <li>
+                            Utility Bill (Water/Electric) with your name and
+                            address
+                          </li>
+                          <li>Valid ID with current address visible</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">
+                        Barangay ID / Residency Certificate
+                      </Label>
+                      <Input
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={handleVerificationUpload}
+                        className="h-11 border-2 focus:border-primary"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">
+                        Utility Bill (Water/Electric/Internet)
+                      </Label>
+                      <Input
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={handleVerificationUpload}
+                        className="h-11 border-2 focus:border-primary"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">
+                        Valid ID (Driver's License/Passport)
+                      </Label>
+                      <Input
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={handleVerificationUpload}
+                        className="h-11 border-2 focus:border-primary"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Uploaded Documents List */}
+                  {verificationDocuments.length > 0 && (
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium text-green-700">
+                        Uploaded Documents ({verificationDocuments.length})
+                      </Label>
+                      <div className="space-y-2">
+                        {verificationDocuments.map((doc, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between bg-green-50 dark:bg-green-950/20 p-3 rounded-lg border border-green-200 dark:border-green-800"
+                          >
+                            <div className="flex items-center gap-3 flex-1">
+                              <CheckCircle2 className="h-5 w-5 text-green-600" />
+                              <div>
+                                <p className="text-sm font-medium text-green-900 dark:text-green-100">
+                                  {doc.file.name}
+                                </p>
+                                <p className="text-xs text-green-700 dark:text-green-300">
+                                  {(doc.file.size / 1024 / 1024).toFixed(2)} MB
+                                </p>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => removeVerificationDocument(index)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 rounded px-2 py-1 transition-colors"
+                              type="button"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <Button
+                    onClick={handleSubmitVerification}
+                    disabled={
+                      verificationDocuments.length === 0 ||
+                      uploadingVerification
+                    }
+                    className="w-full h-11 text-base btn-scale bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white"
+                  >
+                    <Upload className="w-5 h-5 mr-2" />
+                    {uploadingVerification
+                      ? "Submitting..."
+                      : `Submit ${verificationDocuments.length} Document${
+                          verificationDocuments.length !== 1 ? "s" : ""
+                        } for Verification`}
+                  </Button>
+                </div>
+              );
+            })()}
+          </CardContent>
+        </Card>
 
         {/* Verification Approved Badge */}
         {verificationStatus === "approved" && (
